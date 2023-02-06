@@ -25,6 +25,7 @@
     "@angular/router": "^14.2.0",
     "@nguniversal/express-engine": "^14.2.3",
     "express": "^4.15.2",
+    "i18next": "^22.4.9",
     "rxjs": "~7.5.0",
     "tslib": "^2.3.0",
     "zone.js": "~0.11.4"
