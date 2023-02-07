@@ -5,6 +5,7 @@ Project with example of broken behaviour of `i18next-locize-backend` in Angular 
 To open, please run:
 
 ```
+npm install
 npm run dev:ssr
 ```
 
