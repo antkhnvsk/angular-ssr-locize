@@ -1,4 +1,4 @@
-import { APP_INITIALIZER, LOCALE_ID, NgModule } from '@angular/core';
+import { APP_INITIALIZER, NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { RouterModule } from '@angular/router';
 import {
@@ -9,10 +9,12 @@ import {
 import I18NextLocizeBackend from 'i18next-locize-backend';
 import { AppComponent } from './app.component';
 import { CustomLocizeBackend } from './custom-locize-backend';
-
 import { LazyPageComponent } from './lazy-page/lazy-page.component';
 
-const USE_CUSTOM_PATCHED_BACKEND = true;
+// Lazy translations are not worked in SSR with default `i18next-locize-backend`.
+// Using `true` here we could look at desired behaviour.
+// It's done by patching `loadUrl` method from `i18next-locize-backend` lib.
+const USE_CUSTOM_PATCHED_BACKEND = false;
 
 export function appInit(i18next: ITranslationService) {
   return () => {
