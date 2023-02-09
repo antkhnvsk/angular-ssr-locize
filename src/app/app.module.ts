@@ -11,8 +11,11 @@ import {
   I18NEXT_SERVICE,
   ITranslationService,
 } from 'angular-i18next';
-import { ResourceKey } from 'i18next';
-import I18NextLocizeBackend from 'i18next-locize-backend';
+import I18NextLocizeBackend, {
+  CustomRequestOptions,
+  RequestCallback,
+  RequestResponse,
+} from 'i18next-locize-backend';
 import { catchError, lastValueFrom, map, of } from 'rxjs';
 import { AppComponent } from './app.component';
 import { CustomLocizeBackend } from './custom-locize-backend';
@@ -22,20 +25,6 @@ import { LazyPageComponent } from './lazy-page/lazy-page.component';
 // Using `true` here we could look at desired behaviour.
 // It's done by patching `loadUrl` method from `i18next-locize-backend` lib.
 const USE_CUSTOM_PATCHED_BACKEND = false;
-
-interface CustomRequestOptions {
-  url: string;
-  method: 'GET' | 'POST';
-  body: ResourceKey | undefined;
-  headers: {
-    [name: string]: string;
-  };
-}
-interface RequestResponse {
-  status: number;
-  data: ResourceKey;
-}
-type RequestCallback = (error: any, response: RequestResponse) => void;
 
 export function appInit(i18next: ITranslationService, httpClient: HttpClient) {
   return () => {
