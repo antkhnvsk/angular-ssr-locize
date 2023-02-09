@@ -1,3 +1,8 @@
+import {
+  HttpClient,
+  HttpClientModule,
+  HttpHeaders,
+} from '@angular/common/http';
 import { APP_INITIALIZER, NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { RouterModule } from '@angular/router';
@@ -6,7 +11,9 @@ import {
   I18NEXT_SERVICE,
   ITranslationService,
 } from 'angular-i18next';
+import { ResourceKey } from 'i18next';
 import I18NextLocizeBackend from 'i18next-locize-backend';
+import { catchError, lastValueFrom, map, of } from 'rxjs';
 import { AppComponent } from './app.component';
 import { CustomLocizeBackend } from './custom-locize-backend';
 import { LazyPageComponent } from './lazy-page/lazy-page.component';
@@ -16,7 +23,21 @@ import { LazyPageComponent } from './lazy-page/lazy-page.component';
 // It's done by patching `loadUrl` method from `i18next-locize-backend` lib.
 const USE_CUSTOM_PATCHED_BACKEND = false;
 
-export function appInit(i18next: ITranslationService) {
+interface CustomRequestOptions {
+  url: string;
+  method: 'GET' | 'POST';
+  body: ResourceKey | undefined;
+  headers: {
+    [name: string]: string;
+  };
+}
+interface RequestResponse {
+  status: number;
+  data: ResourceKey;
+}
+type RequestCallback = (error: any, response: RequestResponse) => void;
+
+export function appInit(i18next: ITranslationService, httpClient: HttpClient) {
   return () => {
     i18next.use(
       USE_CUSTOM_PATCHED_BACKEND ? CustomLocizeBackend : I18NextLocizeBackend
@@ -25,6 +46,7 @@ export function appInit(i18next: ITranslationService) {
     const locizeBackendOptions = {
       projectId: '0ce585e9-0ca9-42d4-b1a5-60cf6f31771d',
       reloadInterval: false,
+      request: promisedRequestWithHttpClient(httpClient),
     };
 
     return i18next.init({
@@ -40,10 +62,34 @@ export const I18N_PROVIDERS = [
   {
     provide: APP_INITIALIZER,
     useFactory: appInit,
-    deps: [I18NEXT_SERVICE],
+    deps: [I18NEXT_SERVICE, HttpClient],
     multi: true,
   },
 ];
+
+export function promisedRequestWithHttpClient(
+  httpClient: HttpClient
+): (
+  info: CustomRequestOptions,
+  callback: RequestCallback
+) => Promise<RequestResponse> {
+  return ({ url, body, headers, method }: CustomRequestOptions) => {
+    const httpHeaders = new HttpHeaders();
+    Object.keys(headers).forEach((key) => httpHeaders.set(key, headers[key]));
+
+    return lastValueFrom(
+      httpClient
+        .request(method, url, {
+          body: body ? JSON.stringify(body) : undefined,
+          headers: httpHeaders,
+        })
+        .pipe(
+          map((data) => ({ status: 200, data })),
+          catchError((error) => of({ status: error.status, data: null as any }))
+        )
+    );
+  };
+}
 
 @NgModule({
   declarations: [AppComponent, LazyPageComponent],
@@ -55,6 +101,7 @@ export const I18N_PROVIDERS = [
         component: LazyPageComponent,
       },
     ]),
+    HttpClientModule,
     I18NextModule.forRoot(),
   ],
   providers: [I18N_PROVIDERS],
